@@ -14,8 +14,9 @@
     issues Page: <% if (issues.length>0){ %> <% issues.forEach(issue=>{%>
     <div class="box">
       <a href="/issues/<%=issue._id%>">
-        <h3><%=issue.longitude%></h3>
-        <h3><%=issue.Complaint_description%></h3>
+        <h3>ID: <%=issue.issueID%></h3>
+        <h3>Name: <%=issue.uname%></h3>
+        <h3>Description: <%=issue.Complaint_description%></h3>
       </a>
     </div>
 

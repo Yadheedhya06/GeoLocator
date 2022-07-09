@@ -68,7 +68,11 @@
             <h6>User mail ID:</h6>
             <p><%=issue.mail%></p>
             <h6>IMG:</h6>
-            <p><%=issue.img%></p>
+            <p>
+              <% if(issue.img){ %>
+              <img src="/uploads/<%=issue.img%>" alt="complaint image" width="200">
+              <% } %>
+            </p>
             <% const date = new Date(issue.createdAt)%>
             <h6>Date:</h6>
             <i><%=date.toDateString()%></i>
