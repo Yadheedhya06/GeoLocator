@@ -16,12 +16,17 @@
     <% const comp = issue.Complaint_description%> <% const s = new
     Date(issue.createdAt).toLocaleString(undefined, {timeZone:'Asia/Kolkata'})%>
     <% const date = new Date(issue.createdAt)%>
-    <p><%=issue.uname%></p>
-    <p><%=issue.mail%></p>
-    <p><%=issue.phone%></p>
-    <p><%=issue.issueID%></p>
-    <p><%=s%></p>
-    <p><%=issue.Complaint_description%></p>
+    <p>Name: <%=issue.uname%></p>
+    <p>Email: <%=issue.mail%></p>
+    <p>Phone: <%=issue.phone%></p>
+    <p>Issue ID: <%=issue.issueID%></p>
+    <p>Date and Time: <%=s%></p>
+    <p>Complaint Description: <%=issue.Complaint_description%></p>
+    <p>image:
+      <% if(issue.img){ %>
+      <img src="/uploads/<%=issue.img%>" alt="complaint image" width="200">
+      <% } %>
+    </p>
     <br />
     <% if(issue.task_manger == ""){%>
     <p>No Task manager is assigned yet</p>
@@ -94,7 +99,7 @@
     <br />
     <br />
     <button class="btn btn-danger delete" data-doc="<%= issue._id %>">
-      delete this issue
+      Delete this issue
     </button>
     <script>
       const trash = document.querySelector("button.delete");

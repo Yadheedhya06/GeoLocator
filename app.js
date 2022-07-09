@@ -1,19 +1,33 @@
 const express = require("express");
 const morgan = require("morgan");
+const path = require("path");
 const mongoose = require("mongoose");
-const formidable = require("formidable");
 const passport = require("passport");
 const localStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
 const session = require("express-session");
 const dotenv = require("dotenv");
 const nodemailer = require("nodemailer");
+const multer = require("multer");
 
 const Issue = require("./models/isssue");
 const User = require("./models/user");
 // const { countDocuments } = require("./models/isssue");
 
 const app = express();
+
+app.use(express.static(__dirname+"./public/"));
+
+const Storage= multer.diskStorage({
+  destination:"./public/uploads/",
+  filename: (req,file,cb)=>{
+    cb(null,file.fieldname+"_"+Date.now()+path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage:Storage
+}).single('file');
 
 dotenv.config();
 
@@ -31,7 +45,9 @@ mongoose
     console.log(error);
   }); //ascynch task
 
-// register new engine
+
+  
+  // register new engine
 app.set("view engine", "ejs");
 
 // middleware 3rd party
@@ -96,56 +112,56 @@ app.get("/", (req, res) => {
   res.render("home");
 });
 
-app.get("/issues/create", (req, res) => {
-  res.render("issueCreate");
-});
-
-app.post("/issues/created", (req, res) => {
-  console.log(req.body);
-  // image upload
-  // var form = new formidable.IncomingForm();
-  // form.parse(req);
-  // form.on("fileBegin", (name, file) => {
-  //   file.path = __dirname + "/uploads/" + file.name;
-  // });
-  // form.on("file", (name, file) => {
-  //   console.log("uploaded file: " + file.name);
-  // });
-  const issue = new Issue(req.body);
-  issue
+app.post("/issues/create", (req, res) => {
+  upload(req,res,(err)=>{
+    if(err){
+    console.log(err)
+   }
+   else{
+    const issueDetail = new Issue({
+      uname: req.body.uname,
+      mail: req.body.mail,
+      phone: req.body.phone,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      issueID: req.body.issueID,
+      Complaint_description: req.body.Complaint_description,
+      img: req.file.filename,
+    })
+    issueDetail
     .save()
     .then((result) => {
       const output = `<p> Thank you ${req.body.uname} for bringing the isuue to our notice , we have started to work on it</p>
-  <p>Regards</p>
-  <p>Manager</p>
-  <p>Department of Safety and Management</p>
-  `;
+                      <p>Regards</p>
+                      <p>Manager</p>
+                      <p>Department of Safety and Management</p>
+                      `;
 
-      // create reusable transporter object using the default SMTP transport
-      let transporter = nodemailer.createTransport({
-        service: "gmail",
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-          user: "fenojiji@gmail.com", // generated ethereal user
+        // create reusable transporter object using the default SMTP transport
+         let transporter = nodemailer.createTransport({
+         service: "gmail",
+         host: "smtp.gmail.com",
+         port: 587,
+         secure: false,
+         auth: {
+          user: "fenojiji@gmail.com",
           pass: process.env.GPASS, // generated ethereal password
-        },
-        tls: {
+         },
+         tls: {
           rejectUnauthorized: false,
-        },
-      });
+         },
+        });
 
-      // setup email data with unicode symbols
-      let mailOptions = {
-        from: '"New Issue Registered" <fenojiji@gmail.com>', // sender address
-        to: `${req.body.mail}`, // list of receivers
-        subject: "Work in Progress", // Subject line
-        text: "Hello world?", // plain text body
-        html: output, // html body
-      };
-      // send mail with defined transport object
-      transporter.sendMail(mailOptions, (error, info) => {
+       // setup email data with unicode symbols
+       let mailOptions = {
+         from: '"New Issue Registered" <fenojiji@gmail.com>',
+         to: `${req.body.mail}`,
+         subject: "Work in Progress",
+         text: "Hello world?",
+         html: output, // html body
+        };
+       // send mail with defined transport object
+       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           return console.log(error);
         }
@@ -154,11 +170,22 @@ app.post("/issues/created", (req, res) => {
 
         res.render("issueCreated", { issue: result });
         // res.render('contact', {msg:'Email has been sent'});
-      });
+        });
     })
     .catch((err) => {
       console.log("error: " + err.message);
     });
+  }
+});
+
+});
+
+app.get("/issues/create", (req, res) => {
+  res.render("issueCreate");
+});
+
+app.get("/issues/created", (req, res) => {
+   res.render("issueCreated");
 });
 
 app.get("/issues", isLoggedin, (req, res) => {
@@ -259,12 +286,6 @@ app.post("/assign/:id", (req, res) => {
   }).then((result) => {
     res.redirect(`/issues/${id}`);
   });
-
-  // Issue.findByIdAndUpdate(id , {})
-  //   .then((result) => {
-  //     res.json({ redirect: "/issues" });
-  //   })
-  //   .catch((e) => console.log(e));
 });
 
 app.get("/login", isLoggedout, (req, res) => {
